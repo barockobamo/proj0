@@ -1,6 +1,12 @@
+# https://stackoverflow.com/questions/23494088/makefile-generic-target-rule
+
 HEADERS = inc/common.h
 
-all: bin/s bin/c
+SOURCES = src/*.c
+OBJECTS = $(SOURCES:src/.c=.o)
+EXECUTABLE = $(OBJECTS:.o=)
+
+all: $(EXECUTABLE)
 
 obj:
 	mkdir $@
@@ -8,16 +14,10 @@ obj:
 bin:
 	mkdir $@
 
-obj/s.o: src/main_s.c obj
+obj/%.o: src/%.c obj
 	gcc -c $< -o $@
 
-obj/c.o: src/main_c.c obj
-	gcc -c $< -o $@
-
-bin/s: obj/s.o bin
-	gcc $< -o $@
-
-bin/c: obj/c.o bin
+bin/%: obj/%.o bin
 	gcc $< -o $@
 
 clean: obj bin
