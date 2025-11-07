@@ -1,0 +1,140 @@
+PS C:\Users\Dolfi\data\proj0> gdb .\bin\buffover.exe
+GNU gdb (GDB) 16.3.90.20250511-git
+Copyright (C) 2024 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-w64-mingw32".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from .\bin\buffover.exe...
+(gdb) list 1, 50
+1       //https://www.jsums.edu/nmeghanathan/files/2015/05/CSC437-Fall2013-Module-5-Buffer-Overflow-Attacks.pdf
+2
+3       #include <stdio.h>
+4
+5       void cannotExecute()
+6       {
+7           printf("This function cannot execute\n");
+8       }
+9
+10      void getInput()
+11      {
+12          char buffer[8];
+13          gets(buffer);
+14          puts(buffer);
+15      }
+16
+17      int main()
+18      {
+19          getInput();
+20          return 0;
+21      }
+(gdb) break 19
+Breakpoint 1 at 0x1400014ac: file .\src\main_buff_over.c, line 19, column 5.
+(gdb) break 13
+Breakpoint 2 at 0x14000147d: file .\src\main_buff_over.c, line 13, column 5.
+(gdb) disas main
+Dump of assembler code for function main:
+   0x000000014000149b <+0>:     push   %rbp
+   0x000000014000149c <+1>:     mov    %rsp,%rbp
+   0x000000014000149f <+4>:     and    $0xfffffffffffffff0,%rsp
+   0x00000001400014a3 <+8>:     sub    $0x20,%rsp
+   0x00000001400014a7 <+12>:    call   0x140001590 <__main>
+   0x00000001400014ac <+17>:    call   0x140001471 <getInput>
+   0x00000001400014b1 <+22>:    mov    $0x0,%eax
+   0x00000001400014b6 <+27>:    mov    %rbp,%rsp
+   0x00000001400014b9 <+30>:    pop    %rbp
+   0x00000001400014ba <+31>:    ret
+End of assembler dump.
+(gdb) disas cannotExecute
+Dump of assembler code for function cannotExecute:
+   0x0000000140001450 <+0>:     push   %rbp
+   0x0000000140001451 <+1>:     mov    %rsp,%rbp
+   0x0000000140001454 <+4>:     and    $0xfffffffffffffff0,%rsp
+   0x0000000140001458 <+8>:     sub    $0x20,%rsp
+   0x000000014000145c <+12>:    lea    0x2b9d(%rip),%rax        # 0x140004000
+   0x0000000140001463 <+19>:    mov    %rax,%rcx
+   0x0000000140001466 <+22>:    call   0x140002738 <puts>
+   0x000000014000146b <+27>:    nop
+   0x000000014000146c <+28>:    mov    %rbp,%rsp
+   0x000000014000146f <+31>:    pop    %rbp
+   0x0000000140001470 <+32>:    ret
+End of assembler dump.
+(gdb) run
+Starting program: C:\Users\Dolfi\data\proj0\bin\buffover.exe 
+[New Thread 25856.0x6a1c]
+
+Thread 1 hit Breakpoint 1, main () at .\src\main_buff_over.c:19
+19          getInput();
+            ^
+(gdb) x/16xw $esp
+0x5ffe60:       0x5f0e8e20      0x00007ff8      0x005ffe90      0x00000000
+0x5ffe70:       0x005ffea0      0x00000000      0x5e597040      0x00007ff7
+0x5ffe80:       0x5e597048      0x00007ff7      0x5e5910c9      0x00007ff7
+0x5ffe90:       0x00000002      0x00007ff7      0x00000002      0x00007ff7
+(gdb) s
+
+Thread 1 hit Breakpoint 2, getInput () at .\src\main_buff_over.c:13
+13          gets(buffer);
+            ^
+(gdb) x/16xw $esp
+0x5ffe20:       0x005ffe90      0x00000000      0x005ffe90      0x00000000
+0x5ffe30:       0x5f0e88c0      0x00007ff8      0x005ffe90      0x00000000
+0x5ffe40:       0x0000002b      0x00000000      0x5f029b37      0x00007ff8
+0x5ffe50:       0x005ffe80      0x00000000      0x5e5914b1      0x00007ff7
+(gdb) s
+14          puts(buffer);
+            ^
+(gdb) x/16xw $esp
+0x5ffe20:       0x0000000a      0x00000000      0x5e597040      0x00007ff7
+0x5ffe30:       0x00000001      0x00000000      0x0000002b      0x00000000
+0x5ffe40:       0x0000002b      0x00000000      0x64636261      0x00676665
+0x5ffe50:       0x005ffe80      0x00000000      0x5e5914b1      0x00007ff7
+(gdb) s
+[New Thread 25856.0x338c]
+15      }
+        ^
+(gdb) x/16xw $esp
+0x5ffe20:       0x005ffe48      0x00000000      0x5f0e7c98      0x00007ff8
+0x5ffe30:       0x00000007      0x00000000      0x5f0e7c98      0x00007ff8
+0x5ffe40:       0x0000002b      0x00000000      0x64636261      0x00676665
+0x5ffe50:       0x005ffe80      0x00000000      0x5e5914b1      0x00007ff7
+(gdb) s
+main () at .\src\main_buff_over.c:20
+20          return 0;
+                   ^
+(gdb) x/16xw $esp
+0x5ffe60:       0x5f0e8e20      0x00007ff8      0x005ffe90      0x00000000
+0x5ffe70:       0x005ffea0      0x00000000      0x5e597040      0x00007ff7
+0x5ffe80:       0x5e597048      0x00007ff7      0x5e5910c9      0x00007ff7
+0x5ffe90:       0x00000002      0x00007ff7      0x00000002      0x00007ff7
+(gdb) s
+21      }
+        ^
+(gdb) x/16xw $esp
+0x5ffe60:       0x5f0e8e20      0x00007ff8      0x005ffe90      0x00000000
+0x5ffe70:       0x005ffea0      0x00000000      0x5e597040      0x00007ff7
+0x5ffe80:       0x5e597048      0x00007ff7      0x5e5910c9      0x00007ff7
+0x5ffe90:       0x00000002      0x00007ff7      0x00000002      0x00007ff7
+(gdb) s
+0x00007ff75e5910c9 in __tmainCRTStartup ()
+(gdb) x/16xw $esp
+0x5ffe90:       0x00000002      0x00007ff7      0x00000002      0x00007ff7
+0x5ffea0:       0x5f0e8e20      0x00007ff8      0x5e5914c0      0x00007ff7
+0x5ffeb0:       0x005ffedc      0x00000000      0x00000000      0x00000000
+0x5ffec0:       0x00000000      0x00000000      0x00000000      0x00000000
+(gdb) s
+Single stepping until exit from function __tmainCRTStartup,
+which has no line number information.
+[Thread 25856.0x6a1c exited with code 0]
+[Thread 25856.0x338c exited with code 0]
+[Inferior 1 (process 25856) exited normally]
+(gdb)
